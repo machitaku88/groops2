@@ -16,6 +16,8 @@ class GanttChart {
         this.pixelPerDay = 30; // 1日あたりのピクセル数（ズームに応じて変わる）
         this.unitType = 'day'; // 表示単位：'day', 'week', 'month'
         this.addTaskMode = false; // タスク追加モード
+        this._longPressTimer = null; // 長押しタイマー
+        this._touchDragging = false; // タッチドラッグ中フラグ
         this.translations = {
             ja: {
                 title: 'Groops',
@@ -239,6 +241,11 @@ class GanttChart {
         document.getElementById('ganttContent').addEventListener('mousedown', (e) => this.onMouseDown(e));
         document.addEventListener('mousemove', (e) => this.onMouseMove(e));
         document.addEventListener('mouseup', (e) => this.onMouseUp(e));
+
+        // タッチイベント（スマホ対応：長押しでバーをドラッグ）
+        document.getElementById('ganttContent').addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+        document.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+        document.addEventListener('touchend', (e) => this.onTouchEnd(e));
         
         // スクロール同期
         const ganttSidebar = document.querySelector('.gantt-sidebar');
@@ -1199,6 +1206,122 @@ class GanttChart {
             this.dragData = null;
             this.saveData();
         }
+    }
+
+    // ===== タッチイベント（スマホ長押しドラッグ） =====
+    onTouchStart(e) {
+        const barEl = e.target.closest('.gantt-bar');
+        if (!barEl) return;
+
+        const touch = e.touches[0];
+        this._touchStartX = touch.clientX;
+        this._touchStartY = touch.clientY;
+        this._touchBarEl = barEl;
+
+        // 長押し判定（400ms）
+        this._longPressTimer = setTimeout(() => {
+            this._touchDragging = true;
+
+            // バイブレーション（対応デバイスのみ）
+            if (navigator.vibrate) navigator.vibrate(30);
+
+            // マウスイベントと同じロジックでドラッグ開始
+            const taskId = parseInt(barEl.dataset.taskId);
+            let task = null;
+            for (let wp of this.workPackages) {
+                task = wp.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            if (!task) return;
+
+            const isLeftEdge = e.target.closest('.gantt-bar-edge.left');
+            const isRightEdge = e.target.closest('.gantt-bar-edge.right');
+            const viewStartDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+            const barRect = barEl.getBoundingClientRect();
+            const containerRect = document.getElementById('ganttContent').getBoundingClientRect();
+
+            this.dragData = {
+                taskId: taskId,
+                startX: touch.clientX,
+                originalLeft: barRect.left - containerRect.left,
+                originalWidth: barRect.width,
+                mode: isLeftEdge ? 'resize-left' : isRightEdge ? 'resize-right' : 'move',
+                originalStartDate: new Date(task.startDate),
+                originalDuration: task.duration,
+                viewStartDate: viewStartDate,
+                containerLeft: containerRect.left,
+                scrollLeft: document.getElementById('ganttContent').scrollLeft
+            };
+
+            barEl.classList.add('dragging');
+        }, 400);
+    }
+
+    onTouchMove(e) {
+        const touch = e.touches[0];
+
+        // 長押し判定中に指が動いたらキャンセル（スクロールさせる）
+        if (this._longPressTimer && !this._touchDragging) {
+            const dx = Math.abs(touch.clientX - this._touchStartX);
+            const dy = Math.abs(touch.clientY - this._touchStartY);
+            if (dx > 10 || dy > 10) {
+                clearTimeout(this._longPressTimer);
+                this._longPressTimer = null;
+            }
+            return;
+        }
+
+        // ドラッグ中
+        if (this._touchDragging && this.dragData) {
+            e.preventDefault(); // スクロールを止める
+
+            let task = null;
+            for (let wp of this.workPackages) {
+                task = wp.tasks.find(t => t.id === this.dragData.taskId);
+                if (task) break;
+            }
+            if (!task) return;
+
+            const deltaX = touch.clientX - this.dragData.startX;
+            const daysPerPixel = 1 / this.pixelPerDay;
+
+            if (this.dragData.mode === 'move') {
+                const deltaDays = Math.round(deltaX * daysPerPixel);
+                task.startDate = new Date(this.dragData.originalStartDate);
+                task.startDate.setDate(task.startDate.getDate() + deltaDays);
+            } else if (this.dragData.mode === 'resize-left') {
+                const deltaDays = Math.round(deltaX * daysPerPixel);
+                task.startDate = new Date(this.dragData.originalStartDate);
+                task.startDate.setDate(task.startDate.getDate() + deltaDays);
+                task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
+            } else if (this.dragData.mode === 'resize-right') {
+                const deltaDays = Math.round(deltaX * daysPerPixel);
+                task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
+            }
+
+            this.renderGantt();
+        }
+    }
+
+    onTouchEnd(e) {
+        // 長押しタイマーをクリア
+        if (this._longPressTimer) {
+            clearTimeout(this._longPressTimer);
+            this._longPressTimer = null;
+        }
+
+        // ドラッグ終了
+        if (this._touchDragging && this.dragData) {
+            const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
+            if (barEl) {
+                barEl.classList.remove('dragging');
+            }
+            this.dragData = null;
+            this.saveData();
+        }
+
+        this._touchDragging = false;
+        this._touchBarEl = null;
     }
 
     onWorkPackageDragStart(e, wpId) {
