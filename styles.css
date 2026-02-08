@@ -1,0 +1,651 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    min-height: 100vh;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+h1 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 50px;
+    width: auto;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.month-nav {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.month-display {
+    min-width: 90px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 12px;
+    margin: 0 3px;
+}
+
+.btn {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 3px;
+    background-color: #ecf0f1;
+    color: #333;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background-color: #d5dbdb;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-lang {
+    background-color: #9b59b6;
+    color: white;
+    font-weight: 500;
+}
+
+.btn-lang:hover {
+    background-color: #8e44ad;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #229954;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+.btn-active-mode {
+    background-color: #e67e22;
+    animation: pulse 1.5s infinite;
+}
+
+.btn-active-mode:hover {
+    background-color: #d35400;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(230, 126, 34, 0);
+    }
+}
+
+.add-task-cursor {
+    cursor: crosshair !important;
+}
+
+.add-task-cursor * {
+    cursor: crosshair !important;
+}
+
+.view-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.zoom-control {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+    padding: 2px 8px;
+    background-color: white;
+}
+
+.zoom-display {
+    min-width: 50px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+}
+
+.unit-control {
+    display: flex;
+    gap: 2px;
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 0;
+}
+
+.btn-active {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-active:hover {
+    background-color: #2980b9;
+}
+
+.gantt-container {
+    display: flex;
+    gap: 0;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: white;
+}
+
+.gantt-sidebar {
+    width: 180px;
+    border-right: 1px solid #bdc3c7;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+}
+
+.sidebar-header {
+    padding: 0 8px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background-color: #ecf0f1;
+    border-bottom: 1px solid #bdc3c7;
+    text-align: center;
+    font-size: 12px;
+}
+
+.task-list {
+    /* overflow-y: auto; を削除 - 親要素の .gantt-sidebar でスクロール */
+}
+
+.workpackage-item {
+    background-color: white;
+    box-sizing: border-box;
+    /* padding/marginを削除して高さを右カラムと完全一致 */
+}
+
+.workpackage-item[draggable="true"] {
+    cursor: grab;
+}
+
+.workpackage-item.dragging-wp {
+    opacity: 0.5;
+    background-color: #e3f2fd;
+}
+
+.workpackage-item.drag-over-wp {
+    background-color: #c3e9ff;
+}
+
+.workpackage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    background-color: #ecf0f1;
+    font-weight: 500;
+    font-size: 11px;
+    gap: 3px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.workpackage-header:hover {
+    background-color: #d5dbdb;
+}
+
+.add-wp-placeholder {
+    padding: 15px;
+    text-align: center;
+    color: #3498db;
+    border: 2px dashed #3498db !important;
+    font-weight: bold;
+    background-color: #f0f7ff;
+    cursor: pointer !important;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+
+.add-wp-placeholder:hover {
+    background-color: #e3f2fd;
+    border: 2px solid #3498db !important;
+}
+
+.workpackage-name {
+    flex: 1;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #333;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+}
+
+.workpackage-name:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.add-task-btn {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    padding: 2px 5px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.add-task-btn:hover {
+    background-color: #229954;
+}
+
+.tasks-list {
+    background-color: #fafafa;
+    box-sizing: border-box;
+    /* max-heightとoverflowを削除 - 親要素でスクロール管理 */
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 0 20px;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    border-bottom: 1px solid #ecf0f1;
+    background-color: #fafafa;
+    transition: background-color 0.2s;
+    font-size: 10px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.task-item:hover {
+    background-color: #ecf0f1;
+}
+
+.task-item[draggable="true"] {
+    cursor: grab;
+}
+
+.task-item.dragging-task {
+    opacity: 0.5;
+    background-color: #fff3e0;
+}
+
+.task-item.drag-over-task {
+    background-color: #ffe0b2;
+    border-left: 3px solid #ff9800;
+}
+
+.task-name {
+    flex: 1;
+    color: #666;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+}
+
+.task-name:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    padding: 2px 5px;
+    cursor: pointer;
+    font-size: 10px;
+    margin-left: 3px;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.task-menu-btn {
+    background-color: transparent;
+    color: #7f8c8d;
+    border: none;
+    border-radius: 2px;
+    padding: 0 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 3px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    line-height: 1;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-menu-btn:hover {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+}
+
+.task-dropdown-menu {
+    position: absolute;
+    right: 5px;
+    top: 100%;
+    background-color: white;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 120px;
+    margin-top: 2px;
+}
+
+.task-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.task-menu-item:hover {
+    background-color: #ecf0f1;
+}
+
+.task-menu-item:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.task-menu-item:last-child {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.task-menu-item span {
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+.gantt-chart {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.gantt-header {
+    background-color: #ecf0f1;
+    border-bottom: 1px solid #bdc3c7;
+    height: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* スクロールバーを非表示 */
+    scrollbar-width: none;
+}
+
+.gantt-header::-webkit-scrollbar {
+    display: none;
+}
+
+.header-day {
+    flex: 0 0 auto;
+    padding: 2px 0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 400;
+    border-right: 1px solid #bdc3c7;
+    color: #555;
+}
+
+.header-day.weekend {
+    background-color: #e8f4f8;
+}
+
+.gantt-content {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    max-height: calc(100vh - 150px);
+}
+
+.gantt-row {
+    display: flex;
+    border-bottom: 1px solid #ecf0f1;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.gantt-row-bg {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+}
+
+.day-cell {
+    flex: 0 0 auto;
+    border-right: 1px solid #ecf0f1;
+}
+
+.day-cell.weekend {
+    background-color: #f0f8fc;
+}
+
+.gantt-bar-container {
+    position: relative;
+    flex: 1;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    box-sizing: border-box;
+}
+
+.bar-label {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+    font-size: 12px;
+}
+
+.gantt-bar {
+    position: absolute;
+    height: 16px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border-radius: 2px;
+    cursor: grab;
+    border: 1px solid #1a5276;
+    display: flex;
+    align-items: center;
+    padding: 0 3px;
+    color: white;
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    transition: box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 0.85;
+}
+
+.gantt-bar:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1);
+}
+
+.gantt-bar.dragging {
+    cursor: grabbing;
+    z-index: 1000;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gantt-bar-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: col-resize;
+}
+
+.gantt-bar-edge.left {
+    left: 0;
+}
+
+.gantt-bar-edge.right {
+    right: 0;
+}
+
+
+
+/* スクロールバーのスタイル */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .controls {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .month-nav {
+        width: 100%;
+    }
+
+    .gantt-sidebar {
+        width: 150px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+}

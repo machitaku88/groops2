@@ -1,0 +1,24 @@
+<svg width="180" height="50" viewBox="0 0 180 50" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- アイコン部分: 円形のグループアイコン -->
+  <circle cx="18" cy="25" r="6" fill="url(#gradient)" opacity="0.8"/>
+  <circle cx="28" cy="18" r="5" fill="url(#gradient)" opacity="0.9"/>
+  <circle cx="28" cy="32" r="5" fill="url(#gradient)" opacity="0.9"/>
+  <circle cx="38" cy="25" r="6" fill="url(#gradient)"/>
+  
+  <!-- テキスト部分 -->
+  <text x="52" y="35" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#2c3e50">
+    Groops
+  </text>
+  
+  <!-- サブタイトル -->
+  <text x="54" y="44" font-family="Arial, sans-serif" font-size="8" fill="#7f8c8d" letter-spacing="1.5">
+    GANTT CHART
+  </text>
+</svg>
