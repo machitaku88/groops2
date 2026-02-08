@@ -1188,14 +1188,6 @@ class GanttChart {
     onMouseMove(e) {
         if (!this.dragData) return;
 
-        const deltaX = e.clientX - this.dragData.startX;
-        const daysPerPixel = 1 / this.pixelPerDay;
-        const deltaDays = Math.round(deltaX * daysPerPixel);
-
-        // 前回と同じなら何もしない
-        if (deltaDays === this.dragData._lastDeltaDays) return;
-        this.dragData._lastDeltaDays = deltaDays;
-
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
@@ -1203,24 +1195,24 @@ class GanttChart {
         }
         if (!task) return;
 
+        const deltaX = e.clientX - this.dragData.startX;
+        const daysPerPixel = 1 / this.pixelPerDay;
+
         if (this.dragData.mode === 'move') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
         } else if (this.dragData.mode === 'resize-left') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
             task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
         } else if (this.dragData.mode === 'resize-right') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        // requestAnimationFrameでスロットル（毎フレーム1回だけ再描画）
-        if (!this._rafId) {
-            this._rafId = requestAnimationFrame(() => {
-                this._rafId = null;
-                this.renderGantt();
-            });
-        }
+        this.renderGantt();
     }
 
     onMouseUp(e) {
@@ -1277,17 +1269,9 @@ class GanttChart {
     onTouchMove(e) {
         if (!this.editMode || !this.dragData) return;
 
-        e.preventDefault(); // スクロールを防止
+        e.preventDefault();
 
         const touch = e.touches[0];
-        const deltaX = touch.clientX - this.dragData.startX;
-        const daysPerPixel = 1 / this.pixelPerDay;
-        const deltaDays = Math.round(deltaX * daysPerPixel);
-
-        // 前回と同じなら何もしない
-        if (deltaDays === this.dragData._lastDeltaDays) return;
-        this.dragData._lastDeltaDays = deltaDays;
-
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
@@ -1295,24 +1279,24 @@ class GanttChart {
         }
         if (!task) return;
 
+        const deltaX = touch.clientX - this.dragData.startX;
+        const daysPerPixel = 1 / this.pixelPerDay;
+
         if (this.dragData.mode === 'move') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
         } else if (this.dragData.mode === 'resize-left') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
             task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
         } else if (this.dragData.mode === 'resize-right') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        // requestAnimationFrameでスロットル（毎フレーム1回だけ再描画）
-        if (!this._rafId) {
-            this._rafId = requestAnimationFrame(() => {
-                this._rafId = null;
-                this.renderGantt();
-            });
-        }
+        this.renderGantt();
     }
 
     onTouchEnd(e) {
