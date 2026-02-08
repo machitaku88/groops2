@@ -16,8 +16,7 @@ class GanttChart {
         this.pixelPerDay = 30; // 1日あたりのピクセル数（ズームに応じて変わる）
         this.unitType = 'day'; // 表示単位：'day', 'week', 'month'
         this.addTaskMode = false; // タスク追加モード
-        this._longPressTimer = null; // 長押しタイマー
-        this._touchDragging = false; // タッチドラッグ中フラグ
+        this.editMode = false; // 編集モード（タッチ操作用）
         this.translations = {
             ja: {
                 title: 'Groops',
@@ -42,7 +41,9 @@ class GanttChart {
                 unitDay: '日',
                 unitWeek: '週',
                 unitMonth: '月',
-                exportToExcel: 'エクセルにエクスポート'
+                exportToExcel: 'エクセルにエクスポート',
+                editMode: '✏️ 編集モード',
+                editModeActive: '✏️ 編集中（タップで解除）'
             },
             en: {
                 title: 'Groops',
@@ -67,7 +68,9 @@ class GanttChart {
                 unitDay: 'Day',
                 unitWeek: 'Week',
                 unitMonth: 'Month',
-                exportToExcel: 'Export to Excel'
+                exportToExcel: 'Export to Excel',
+                editMode: '✏️ Edit Mode',
+                editModeActive: '✏️ Editing (tap to exit)'
             }
         };
         this.init();
@@ -124,6 +127,22 @@ class GanttChart {
             btn.textContent = this.t('addTaskMode');
             btn.classList.remove('btn-active-mode');
             ganttContent.classList.remove('add-task-cursor');
+        }
+    }
+
+    toggleEditMode() {
+        this.editMode = !this.editMode;
+        const btn = document.getElementById('editModeBtn');
+        const container = document.querySelector('.gantt-container');
+
+        if (this.editMode) {
+            btn.textContent = this.t('editModeActive');
+            btn.classList.add('active');
+            container.classList.add('edit-mode-active');
+        } else {
+            btn.textContent = this.t('editMode');
+            btn.classList.remove('active');
+            container.classList.remove('edit-mode-active');
         }
     }
 
@@ -228,6 +247,7 @@ class GanttChart {
         document.getElementById('nextMonth').addEventListener('click', () => this.nextMonth());
         document.getElementById('langToggleBtn').addEventListener('click', () => this.toggleLanguage());
         document.getElementById('exportBtn').addEventListener('click', () => this.exportToExcel());
+        document.getElementById('editModeBtn').addEventListener('click', () => this.toggleEditMode());
         
         // ズームコントロール
         document.getElementById('zoomOutBtn').addEventListener('click', () => this.zoomOut());
@@ -648,6 +668,10 @@ class GanttChart {
         
         // ズームレベル表示を更新
         document.getElementById('zoomLevel').textContent = `${this.zoomLevel}%`;
+
+        // 編集モードボタンのテキストを更新
+        const editModeBtn = document.getElementById('editModeBtn');
+        editModeBtn.textContent = this.editMode ? this.t('editModeActive') : this.t('editMode');
     }
 
     syncRowHeights() {
@@ -1208,110 +1232,83 @@ class GanttChart {
         }
     }
 
-    // ===== タッチイベント（スマホ長押しドラッグ） =====
+    // ===== タッチイベント（編集モード時のみバーをドラッグ） =====
     onTouchStart(e) {
+        if (!this.editMode) return; // 編集モードでなければ何もしない
+
         const barEl = e.target.closest('.gantt-bar');
         if (!barEl) return;
 
+        e.preventDefault(); // スクロールを防止
+
         const touch = e.touches[0];
-        this._touchStartX = touch.clientX;
-        this._touchStartY = touch.clientY;
-        this._touchBarEl = barEl;
+        const taskId = parseInt(barEl.dataset.taskId);
+        let task = null;
+        for (let wp of this.workPackages) {
+            task = wp.tasks.find(t => t.id === taskId);
+            if (task) break;
+        }
+        if (!task) return;
 
-        // 長押し判定（400ms）
-        this._longPressTimer = setTimeout(() => {
-            this._touchDragging = true;
+        const isLeftEdge = e.target.closest('.gantt-bar-edge.left');
+        const isRightEdge = e.target.closest('.gantt-bar-edge.right');
+        const viewStartDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+        const barRect = barEl.getBoundingClientRect();
+        const containerRect = document.getElementById('ganttContent').getBoundingClientRect();
 
-            // バイブレーション（対応デバイスのみ）
-            if (navigator.vibrate) navigator.vibrate(30);
+        this.dragData = {
+            taskId: taskId,
+            startX: touch.clientX,
+            originalLeft: barRect.left - containerRect.left,
+            originalWidth: barRect.width,
+            mode: isLeftEdge ? 'resize-left' : isRightEdge ? 'resize-right' : 'move',
+            originalStartDate: new Date(task.startDate),
+            originalDuration: task.duration,
+            viewStartDate: viewStartDate,
+            containerLeft: containerRect.left,
+            scrollLeft: document.getElementById('ganttContent').scrollLeft
+        };
 
-            // マウスイベントと同じロジックでドラッグ開始
-            const taskId = parseInt(barEl.dataset.taskId);
-            let task = null;
-            for (let wp of this.workPackages) {
-                task = wp.tasks.find(t => t.id === taskId);
-                if (task) break;
-            }
-            if (!task) return;
-
-            const isLeftEdge = e.target.closest('.gantt-bar-edge.left');
-            const isRightEdge = e.target.closest('.gantt-bar-edge.right');
-            const viewStartDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
-            const barRect = barEl.getBoundingClientRect();
-            const containerRect = document.getElementById('ganttContent').getBoundingClientRect();
-
-            this.dragData = {
-                taskId: taskId,
-                startX: touch.clientX,
-                originalLeft: barRect.left - containerRect.left,
-                originalWidth: barRect.width,
-                mode: isLeftEdge ? 'resize-left' : isRightEdge ? 'resize-right' : 'move',
-                originalStartDate: new Date(task.startDate),
-                originalDuration: task.duration,
-                viewStartDate: viewStartDate,
-                containerLeft: containerRect.left,
-                scrollLeft: document.getElementById('ganttContent').scrollLeft
-            };
-
-            barEl.classList.add('dragging');
-        }, 400);
+        barEl.classList.add('dragging');
     }
 
     onTouchMove(e) {
+        if (!this.editMode || !this.dragData) return;
+
+        e.preventDefault(); // スクロールを防止
+
         const touch = e.touches[0];
+        let task = null;
+        for (let wp of this.workPackages) {
+            task = wp.tasks.find(t => t.id === this.dragData.taskId);
+            if (task) break;
+        }
+        if (!task) return;
 
-        // 長押し判定中に指が動いたらキャンセル（スクロールさせる）
-        if (this._longPressTimer && !this._touchDragging) {
-            const dx = Math.abs(touch.clientX - this._touchStartX);
-            const dy = Math.abs(touch.clientY - this._touchStartY);
-            if (dx > 10 || dy > 10) {
-                clearTimeout(this._longPressTimer);
-                this._longPressTimer = null;
-            }
-            return;
+        const deltaX = touch.clientX - this.dragData.startX;
+        const daysPerPixel = 1 / this.pixelPerDay;
+
+        if (this.dragData.mode === 'move') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
+            task.startDate = new Date(this.dragData.originalStartDate);
+            task.startDate.setDate(task.startDate.getDate() + deltaDays);
+        } else if (this.dragData.mode === 'resize-left') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
+            task.startDate = new Date(this.dragData.originalStartDate);
+            task.startDate.setDate(task.startDate.getDate() + deltaDays);
+            task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
+        } else if (this.dragData.mode === 'resize-right') {
+            const deltaDays = Math.round(deltaX * daysPerPixel);
+            task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        // ドラッグ中
-        if (this._touchDragging && this.dragData) {
-            e.preventDefault(); // スクロールを止める
-
-            let task = null;
-            for (let wp of this.workPackages) {
-                task = wp.tasks.find(t => t.id === this.dragData.taskId);
-                if (task) break;
-            }
-            if (!task) return;
-
-            const deltaX = touch.clientX - this.dragData.startX;
-            const daysPerPixel = 1 / this.pixelPerDay;
-
-            if (this.dragData.mode === 'move') {
-                const deltaDays = Math.round(deltaX * daysPerPixel);
-                task.startDate = new Date(this.dragData.originalStartDate);
-                task.startDate.setDate(task.startDate.getDate() + deltaDays);
-            } else if (this.dragData.mode === 'resize-left') {
-                const deltaDays = Math.round(deltaX * daysPerPixel);
-                task.startDate = new Date(this.dragData.originalStartDate);
-                task.startDate.setDate(task.startDate.getDate() + deltaDays);
-                task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
-            } else if (this.dragData.mode === 'resize-right') {
-                const deltaDays = Math.round(deltaX * daysPerPixel);
-                task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
-            }
-
-            this.renderGantt();
-        }
+        this.renderGantt();
     }
 
     onTouchEnd(e) {
-        // 長押しタイマーをクリア
-        if (this._longPressTimer) {
-            clearTimeout(this._longPressTimer);
-            this._longPressTimer = null;
-        }
+        if (!this.editMode) return;
 
-        // ドラッグ終了
-        if (this._touchDragging && this.dragData) {
+        if (this.dragData) {
             const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
             if (barEl) {
                 barEl.classList.remove('dragging');
@@ -1319,9 +1316,6 @@ class GanttChart {
             this.dragData = null;
             this.saveData();
         }
-
-        this._touchDragging = false;
-        this._touchBarEl = null;
     }
 
     onWorkPackageDragStart(e, wpId) {
