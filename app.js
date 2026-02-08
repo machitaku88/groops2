@@ -17,6 +17,7 @@ class GanttChart {
         this.unitType = 'day'; // 表示単位：'day', 'week', 'month'
         this.addTaskMode = false; // タスク追加モード
         this.editMode = false; // 編集モード（タッチ操作用）
+        this._rafId = null; // ドラッグ時のrequestAnimationFrame ID
         this.translations = {
             ja: {
                 title: 'Groops',
@@ -1191,7 +1192,10 @@ class GanttChart {
         const daysPerPixel = 1 / this.pixelPerDay;
         const deltaDays = Math.round(deltaX * daysPerPixel);
 
-        // データモデルを更新
+        // 前回と同じなら何もしない
+        if (deltaDays === this.dragData._lastDeltaDays) return;
+        this.dragData._lastDeltaDays = deltaDays;
+
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
@@ -1210,15 +1214,12 @@ class GanttChart {
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        // バー要素のstyleだけ直接更新（DOM全体の再構築をしない）
-        const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
-        if (barEl) {
-            const viewStartDate = this.dragData.viewStartDate;
-            const daysFromStart = Math.ceil((task.startDate - viewStartDate) / (1000 * 60 * 60 * 24));
-            const left = Math.max(0, daysFromStart * this.pixelPerDay);
-            const width = Math.min(task.duration * this.pixelPerDay, (this.daysInView - Math.max(0, daysFromStart)) * this.pixelPerDay);
-            barEl.style.left = left + 'px';
-            barEl.style.width = width + 'px';
+        // requestAnimationFrameでスロットル（毎フレーム1回だけ再描画）
+        if (!this._rafId) {
+            this._rafId = requestAnimationFrame(() => {
+                this._rafId = null;
+                this.renderGantt();
+            });
         }
     }
 
@@ -1283,6 +1284,10 @@ class GanttChart {
         const daysPerPixel = 1 / this.pixelPerDay;
         const deltaDays = Math.round(deltaX * daysPerPixel);
 
+        // 前回と同じなら何もしない
+        if (deltaDays === this.dragData._lastDeltaDays) return;
+        this.dragData._lastDeltaDays = deltaDays;
+
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
@@ -1301,15 +1306,12 @@ class GanttChart {
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        // バー要素のstyleだけ直接更新（DOM全体の再構築をしない）
-        const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
-        if (barEl) {
-            const viewStartDate = this.dragData.viewStartDate;
-            const daysFromStart = Math.ceil((task.startDate - viewStartDate) / (1000 * 60 * 60 * 24));
-            const left = Math.max(0, daysFromStart * this.pixelPerDay);
-            const width = Math.min(task.duration * this.pixelPerDay, (this.daysInView - Math.max(0, daysFromStart)) * this.pixelPerDay);
-            barEl.style.left = left + 'px';
-            barEl.style.width = width + 'px';
+        // requestAnimationFrameでスロットル（毎フレーム1回だけ再描画）
+        if (!this._rafId) {
+            this._rafId = requestAnimationFrame(() => {
+                this._rafId = null;
+                this.renderGantt();
+            });
         }
     }
 

@@ -553,6 +553,7 @@ h1 {
     right: 0;
     bottom: 0;
     z-index: 0;
+    pointer-events: none;
 }
 
 .day-cell {
@@ -571,6 +572,7 @@ h1 {
     min-height: 28px;
     max-height: 28px;
     box-sizing: border-box;
+    z-index: 1;
 }
 
 .bar-label {
