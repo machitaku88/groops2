@@ -272,7 +272,7 @@ class GanttChart {
         const ganttContent = document.getElementById('ganttContent');
         const ganttHeader = document.getElementById('ganttHeader');
         
-        console.log('Setting up scroll sync - Sidebar:', ganttSidebar, 'Content:', ganttContent);
+
         
         // ガントコンテンツ（右パネル）のスクロール - 水平と垂直の両方を同期
         ganttContent.addEventListener('scroll', (e) => {
@@ -283,7 +283,7 @@ class GanttChart {
             if (!this._syncing && ganttSidebar) {
                 this._syncing = true;
                 ganttSidebar.scrollTop = e.target.scrollTop;
-                console.log('Content scrolled, syncing sidebar to:', e.target.scrollTop);
+
                 this._syncing = false;
             }
         });
@@ -294,7 +294,7 @@ class GanttChart {
                 if (!this._syncing) {
                     this._syncing = true;
                     ganttContent.scrollTop = e.target.scrollTop;
-                    console.log('Sidebar scrolled, syncing content to:', e.target.scrollTop);
+
                     this._syncing = false;
                 }
             });
@@ -303,11 +303,11 @@ class GanttChart {
 
     loadData() {
         const saved = localStorage.getItem('ganttData');
-        console.log('Loading data from localStorage:', saved);
+
         
         if (saved) {
             const data = JSON.parse(saved);
-            console.log('Loaded workPackages count:', data.length);
+
             this.workPackages = data.map(wp => ({
                 ...wp,
                 tasks: wp.tasks.map(task => ({
@@ -316,7 +316,7 @@ class GanttChart {
                 }))
             }));
         } else {
-            console.log('No saved data, using default data');
+
             // デフォルトデータ
             this.workPackages = [
                 {
@@ -352,7 +352,7 @@ class GanttChart {
                     ]
                 }
             ];
-            console.log('Default workPackages count:', this.workPackages.length);
+
         }
     }
 
@@ -402,19 +402,19 @@ class GanttChart {
             ]
         };
         this.workPackages.push(newWorkPackage);
-        console.log('Added workPackage, total count:', this.workPackages.length);
+
         this.saveData();
         this.render();
     }
 
     resetData() {
         if (confirm(this.t('confirmReset'))) {
-            console.log('Resetting data...');
+
             localStorage.removeItem('ganttData');
             this.workPackages = [];
             this.loadData();
             this.render();
-            console.log('Data reset complete');
+
         }
     }
 
@@ -434,7 +434,7 @@ class GanttChart {
             tasksList.style.display = this.showTasks ? 'block' : 'none';
         });
 
-        console.log('Tasks visibility toggled:', this.showTasks);
+
         
         // 表示状態に合わせてガント側もリレンダリング
         this.render();
@@ -676,7 +676,7 @@ class GanttChart {
 
     syncRowHeights() {
         // 高さはCSSで固定するため、この関数は無効化
-        console.log('syncRowHeights called but disabled - using CSS fixed heights');
+
         return;
         
         const ganttRows = document.querySelectorAll('.gantt-row');
@@ -772,10 +772,10 @@ class GanttChart {
             sidebarHeader.textContent = this.t('workPackages');
         }
 
-        console.log('renderTasks called, workPackages count:', this.workPackages.length);
+
 
         this.workPackages.forEach((wp, wpIndex) => {
-            console.log(`Creating taskList item for workPackage ${wpIndex}: ${wp.name} (id: ${wp.id})`);
+
             
             const wpEl = document.createElement('div');
             wpEl.className = 'workpackage-item';
@@ -854,7 +854,7 @@ class GanttChart {
             tasksEl.addEventListener('dragleave', (e) => this.onTaskDragLeave(e));
             
             wp.tasks.forEach((task, taskIndex) => {
-                console.log(`  Task ${taskIndex}: ${task.name} (id: ${task.id})`);
+
                 
                 const taskEl = document.createElement('div');
                 taskEl.className = 'task-item';
@@ -928,20 +928,20 @@ class GanttChart {
         const month = this.currentDate.getMonth();
         const startDate = new Date(year, month, 1);
 
-        console.log('renderGantt called, workPackages count:', this.workPackages.length);
-        console.log('workPackages:', this.workPackages);
+        // DocumentFragmentで一括追加（レイアウト再計算を最小化）
+        const fragment = document.createDocumentFragment();
 
         if (this.showTasks) {
             // タスク表示オン：各工程ごとにヘッダー行（バーなし）を作成、その後、各タスク行を作成
             this.workPackages.forEach((wp, wpIndex) => {
                 // 工程ヘッダー行（バーなし）
                 const headerRowEl = this.createGanttRow(null, startDate, `wp-${wp.id}`);
-                ganttContent.appendChild(headerRowEl);
-                
+                fragment.appendChild(headerRowEl);
+
                 // 各タスク行（バー表示）
                 wp.tasks.forEach((task, taskIndex) => {
                     const rowEl = this.createGanttRow(task, startDate, `task-${task.id}`);
-                    ganttContent.appendChild(rowEl);
+                    fragment.appendChild(rowEl);
                 });
             });
         } else {
@@ -949,25 +949,20 @@ class GanttChart {
             const unitDays = this.getUnitDays();
             const unitCount = Math.ceil(this.daysInView / unitDays);
             const totalWidth = unitCount * this.pixelPerDay * unitDays;
-            
+            const cellWidth = this.pixelPerDay * unitDays;
+
             this.workPackages.forEach((wp, wpIndex) => {
-                console.log(`Creating row for workPackage ${wpIndex}: ${wp.name} (id: ${wp.id}), tasks: ${wp.tasks.length}`);
-                
                 const rowEl = document.createElement('div');
                 rowEl.className = 'gantt-row';
                 rowEl.id = `row-${wp.id}`;
                 rowEl.style.width = totalWidth + 'px';
 
+                // 背景グリッドをCSSグラデーションで描画
                 const rowBgEl = document.createElement('div');
                 rowBgEl.className = 'gantt-row-bg';
                 rowBgEl.style.width = totalWidth + 'px';
-                for (let i = 0; i < unitCount; i++) {
-                    const dayCell = document.createElement('div');
-                    dayCell.className = 'day-cell';
-                    dayCell.style.width = (this.pixelPerDay * unitDays) + 'px';
-                    dayCell.style.flex = 'none';
-                    rowBgEl.appendChild(dayCell);
-                }
+                rowBgEl.style.backgroundImage = `repeating-linear-gradient(to right, transparent, transparent ${cellWidth - 1}px, #ecf0f1 ${cellWidth - 1}px, #ecf0f1 ${cellWidth}px)`;
+                rowBgEl.style.backgroundSize = `${cellWidth}px 100%`;
                 rowEl.appendChild(rowBgEl);
 
                 const barContainer = document.createElement('div');
@@ -983,31 +978,30 @@ class GanttChart {
                 });
 
                 rowEl.appendChild(barContainer);
-                ganttContent.appendChild(rowEl);
+                fragment.appendChild(rowEl);
             });
         }
+
+        ganttContent.appendChild(fragment);
     }
 
     createGanttRow(task, startDate, rowId) {
         const unitDays = this.getUnitDays();
         const unitCount = Math.ceil(this.daysInView / unitDays);
         const totalWidth = unitCount * this.pixelPerDay * unitDays;
-        
+        const cellWidth = this.pixelPerDay * unitDays;
+
         const rowEl = document.createElement('div');
         rowEl.className = 'gantt-row';
         rowEl.id = `${rowId}`;
         rowEl.style.width = totalWidth + 'px';
 
+        // 背景グリッドをCSSグラデーションで描画（DOM要素を大量に作らない）
         const rowBgEl = document.createElement('div');
         rowBgEl.className = 'gantt-row-bg';
         rowBgEl.style.width = totalWidth + 'px';
-        for (let i = 0; i < unitCount; i++) {
-            const dayCell = document.createElement('div');
-            dayCell.className = 'day-cell';
-            dayCell.style.width = (this.pixelPerDay * unitDays) + 'px';
-            dayCell.style.flex = 'none';
-            rowBgEl.appendChild(dayCell);
-        }
+        rowBgEl.style.backgroundImage = `repeating-linear-gradient(to right, transparent, transparent ${cellWidth - 1}px, #ecf0f1 ${cellWidth - 1}px, #ecf0f1 ${cellWidth}px)`;
+        rowBgEl.style.backgroundSize = `${cellWidth}px 100%`;
         rowEl.appendChild(rowBgEl);
 
         const barContainer = document.createElement('div');
@@ -1080,7 +1074,7 @@ class GanttChart {
         // クリックされた行（工程）を特定
         const ganttRowEl = e.target.closest('.gantt-row');
         if (!ganttRowEl) {
-            console.log('No gantt-row found');
+
             return;
         }
 
@@ -1105,13 +1099,13 @@ class GanttChart {
         }
 
         if (!workPackageId) {
-            console.log('No workPackageId found');
+
             return;
         }
 
         const wp = this.workPackages.find(w => w.id === workPackageId);
         if (!wp) {
-            console.log('workPackage not found');
+
             return;
         }
 
@@ -1127,7 +1121,7 @@ class GanttChart {
         const taskStartDate = new Date(viewStartDate);
         taskStartDate.setDate(taskStartDate.getDate() + daysFromStart);
 
-        console.log('Adding task at row:', rowId, 'workPackageId:', workPackageId, 'clickX:', clickX, 'daysFromStart:', daysFromStart, 'startDate:', taskStartDate);
+
 
         // 新しいタスクを追加
         const newId = Math.max(0, ...wp.tasks.map(t => t.id)) + 1;
@@ -1193,32 +1187,39 @@ class GanttChart {
     onMouseMove(e) {
         if (!this.dragData) return;
 
+        const deltaX = e.clientX - this.dragData.startX;
+        const daysPerPixel = 1 / this.pixelPerDay;
+        const deltaDays = Math.round(deltaX * daysPerPixel);
+
+        // データモデルを更新
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
             if (task) break;
         }
-        
         if (!task) return;
 
-        const deltaX = e.clientX - this.dragData.startX;
-        const daysPerPixel = 1 / this.pixelPerDay;
-
         if (this.dragData.mode === 'move') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
         } else if (this.dragData.mode === 'resize-left') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
             task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
         } else if (this.dragData.mode === 'resize-right') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        this.renderGantt();
+        // バー要素のstyleだけ直接更新（DOM全体の再構築をしない）
+        const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
+        if (barEl) {
+            const viewStartDate = this.dragData.viewStartDate;
+            const daysFromStart = Math.ceil((task.startDate - viewStartDate) / (1000 * 60 * 60 * 24));
+            const left = Math.max(0, daysFromStart * this.pixelPerDay);
+            const width = Math.min(task.duration * this.pixelPerDay, (this.daysInView - Math.max(0, daysFromStart)) * this.pixelPerDay);
+            barEl.style.left = left + 'px';
+            barEl.style.width = width + 'px';
+        }
     }
 
     onMouseUp(e) {
@@ -1278,6 +1279,10 @@ class GanttChart {
         e.preventDefault(); // スクロールを防止
 
         const touch = e.touches[0];
+        const deltaX = touch.clientX - this.dragData.startX;
+        const daysPerPixel = 1 / this.pixelPerDay;
+        const deltaDays = Math.round(deltaX * daysPerPixel);
+
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
@@ -1285,24 +1290,27 @@ class GanttChart {
         }
         if (!task) return;
 
-        const deltaX = touch.clientX - this.dragData.startX;
-        const daysPerPixel = 1 / this.pixelPerDay;
-
         if (this.dragData.mode === 'move') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
         } else if (this.dragData.mode === 'resize-left') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
             task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
         } else if (this.dragData.mode === 'resize-right') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        this.renderGantt();
+        // バー要素のstyleだけ直接更新（DOM全体の再構築をしない）
+        const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
+        if (barEl) {
+            const viewStartDate = this.dragData.viewStartDate;
+            const daysFromStart = Math.ceil((task.startDate - viewStartDate) / (1000 * 60 * 60 * 24));
+            const left = Math.max(0, daysFromStart * this.pixelPerDay);
+            const width = Math.min(task.duration * this.pixelPerDay, (this.daysInView - Math.max(0, daysFromStart)) * this.pixelPerDay);
+            barEl.style.left = left + 'px';
+            barEl.style.width = width + 'px';
+        }
     }
 
     onTouchEnd(e) {
@@ -1381,7 +1389,7 @@ class GanttChart {
 
     // タスクドラッグ&ドロップメソッド
     onTaskDragStart(e, taskId, wpId) {
-        console.log('Task drag start:', taskId, 'from workPackage:', wpId);
+
         this.draggedTaskId = taskId;
         this.draggedTaskSourceWpId = wpId;
         e.dataTransfer.effectAllowed = 'move';
@@ -1430,7 +1438,7 @@ class GanttChart {
             return;
         }
         
-        console.log('Task drop: taskId:', draggedTaskId, 'from:', sourceWpId, 'to:', targetWpId);
+
         
         // ドラッグ元とドラッグ先の工程を取得
         const sourceWp = this.workPackages.find(wp => wp.id === sourceWpId);
