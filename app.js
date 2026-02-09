@@ -1227,17 +1227,10 @@ class GanttChart {
     }
 
     // ===== タッチイベント（編集モード時のみバーをドラッグ） =====
-    _debug(msg) {
-        const el = document.getElementById('debugMsg');
-        if (el) el.textContent = msg;
-    }
-
     onTouchStart(e) {
-        this._debug('touch! edit=' + this.editMode + ' target=' + e.target.className);
         if (!this.editMode) return;
 
         const barEl = e.target.closest('.gantt-bar');
-        this._debug('bar=' + (barEl ? 'FOUND' : 'NULL') + ' target=' + e.target.className);
         if (!barEl) return;
 
         e.preventDefault();
@@ -1271,7 +1264,6 @@ class GanttChart {
         };
 
         barEl.classList.add('dragging');
-        this._debug('DRAG START! taskId=' + taskId);
     }
 
     onTouchMove(e) {
@@ -1283,8 +1275,6 @@ class GanttChart {
         const deltaX = touch.clientX - this.dragData.startX;
         const daysPerPixel = 1 / this.pixelPerDay;
         const deltaDays = Math.round(deltaX * daysPerPixel);
-
-        this._debug('dx=' + Math.round(deltaX) + ' days=' + deltaDays + ' ppd=' + this.pixelPerDay);
 
         let task = null;
         for (let wp of this.workPackages) {
@@ -1313,9 +1303,6 @@ class GanttChart {
             const width = task.duration * this.pixelPerDay;
             barEl.style.left = left + 'px';
             barEl.style.width = width + 'px';
-            this._debug('dx=' + Math.round(deltaX) + ' days=' + deltaDays + ' left=' + Math.round(left));
-        } else {
-            this._debug('BAR NOT FOUND! id=' + this.dragData.taskId);
         }
     }
 
@@ -1542,7 +1529,6 @@ class GanttChart {
 
     async exportToExcel() {
         try {
-            this._debug('Excel読み込み中...');
             await this.loadExcelLibraries();
         } catch (e) {
             alert('エクセルライブラリの読み込みに失敗しました。');
