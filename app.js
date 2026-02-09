@@ -1278,9 +1278,14 @@ class GanttChart {
         if (!this.editMode || !this.dragData) return;
 
         e.preventDefault();
-        this._debug('MOVING...');
 
         const touch = e.touches[0];
+        const deltaX = touch.clientX - this.dragData.startX;
+        const daysPerPixel = 1 / this.pixelPerDay;
+        const deltaDays = Math.round(deltaX * daysPerPixel);
+
+        this._debug('dx=' + Math.round(deltaX) + ' days=' + deltaDays + ' ppd=' + this.pixelPerDay);
+
         let task = null;
         for (let wp of this.workPackages) {
             task = wp.tasks.find(t => t.id === this.dragData.taskId);
@@ -1288,24 +1293,30 @@ class GanttChart {
         }
         if (!task) return;
 
-        const deltaX = touch.clientX - this.dragData.startX;
-        const daysPerPixel = 1 / this.pixelPerDay;
-
         if (this.dragData.mode === 'move') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
         } else if (this.dragData.mode === 'resize-left') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.startDate = new Date(this.dragData.originalStartDate);
             task.startDate.setDate(task.startDate.getDate() + deltaDays);
             task.duration = Math.max(1, this.dragData.originalDuration - deltaDays);
         } else if (this.dragData.mode === 'resize-right') {
-            const deltaDays = Math.round(deltaX * daysPerPixel);
             task.duration = Math.max(1, this.dragData.originalDuration + deltaDays);
         }
 
-        this.renderGantt();
+        // renderGanttの代わりにバーのstyleを直接更新
+        const barEl = document.querySelector(`.gantt-bar[data-task-id="${this.dragData.taskId}"]`);
+        if (barEl) {
+            const viewStartDate = this.dragData.viewStartDate;
+            const daysFromStart = Math.ceil((task.startDate - viewStartDate) / (1000 * 60 * 60 * 24));
+            const left = Math.max(0, daysFromStart * this.pixelPerDay);
+            const width = task.duration * this.pixelPerDay;
+            barEl.style.left = left + 'px';
+            barEl.style.width = width + 'px';
+            this._debug('dx=' + Math.round(deltaX) + ' days=' + deltaDays + ' left=' + Math.round(left));
+        } else {
+            this._debug('BAR NOT FOUND! id=' + this.dragData.taskId);
+        }
     }
 
     onTouchEnd(e) {
