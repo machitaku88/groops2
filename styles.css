@@ -150,6 +150,9 @@ h1 {
     background-color: #fff8f0;
     outline: 2px solid #e67e22;
     outline-offset: -2px;
+    touch-action: none;
+    -webkit-overflow-scrolling: auto;
+    overflow: hidden;
 }
 
 .edit-mode-active .gantt-bar {

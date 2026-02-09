@@ -263,8 +263,8 @@ class GanttChart {
         document.addEventListener('mousemove', (e) => this.onMouseMove(e));
         document.addEventListener('mouseup', (e) => this.onMouseUp(e));
 
-        // タッチイベント（スマホ対応：長押しでバーをドラッグ）
-        document.getElementById('ganttContent').addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+        // タッチイベント（すべてdocumentレベルで受け取る）
+        document.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
         document.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
         document.addEventListener('touchend', (e) => this.onTouchEnd(e));
         
