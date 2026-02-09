@@ -1227,12 +1227,17 @@ class GanttChart {
     }
 
     // ===== タッチイベント（編集モード時のみバーをドラッグ） =====
+    _debug(msg) {
+        const el = document.getElementById('debugMsg');
+        if (el) el.textContent = msg;
+    }
+
     onTouchStart(e) {
-        document.title = 'touch:' + (this.editMode ? 'ON' : 'OFF');
+        this._debug('touch! edit=' + this.editMode + ' target=' + e.target.className);
         if (!this.editMode) return;
 
         const barEl = e.target.closest('.gantt-bar');
-        document.title = 'bar:' + (barEl ? 'found' : 'null') + ' target:' + e.target.className;
+        this._debug('bar=' + (barEl ? 'FOUND' : 'NULL') + ' target=' + e.target.className);
         if (!barEl) return;
 
         e.preventDefault();
@@ -1266,14 +1271,14 @@ class GanttChart {
         };
 
         barEl.classList.add('dragging');
-        document.title = 'drag started!';
+        this._debug('DRAG START! taskId=' + taskId);
     }
 
     onTouchMove(e) {
         if (!this.editMode || !this.dragData) return;
 
         e.preventDefault();
-        document.title = 'moving...';
+        this._debug('MOVING...');
 
         const touch = e.touches[0];
         let task = null;
