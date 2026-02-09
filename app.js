@@ -1527,10 +1527,25 @@ class GanttChart {
         });
     }
 
+    async loadExcelLibraries() {
+        if (typeof ExcelJS !== 'undefined' && typeof saveAs !== 'undefined') return;
+        const load = (src) => new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+        await load('https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js');
+        await load('https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js');
+    }
+
     async exportToExcel() {
-        // ExcelJSライブラリが読み込まれているかチェック
-        if (typeof ExcelJS === 'undefined') {
-            alert('エクセルエクスポート機能の読み込みに失敗しました。ページをリロードしてください。');
+        try {
+            this._debug('Excel読み込み中...');
+            await this.loadExcelLibraries();
+        } catch (e) {
+            alert('エクセルライブラリの読み込みに失敗しました。');
             return;
         }
 
